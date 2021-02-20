@@ -2,7 +2,7 @@ from test2 import Affine,Relu,Sigmoid,SoftmaxWithLoss,SGD
 from activation import activate
 import numpy as np
 import matplotlib.pyplot as plt
-from deep_learning_scratch_for_exercise.dataset import mnist
+from deep_learning_scratch_for_exercise.dataset_zero import mnist
 from collections import OrderedDict
 
 class FiveLayorNet:
@@ -46,7 +46,14 @@ class FiveLayorNet:
         lost = self.lastLayer.forward(y,t)        
         return lost
 
-    def gradient(self,x,t):
+    def loss_with_weight_decay(self,x,t):
+        loss = self.loss(x,t)
+        weight = 0
+        for param in self.params.keys():
+            weight += (0.1*np.sum(self.params[param]**2))/2
+        return loss + weight        
+
+    def gradient(self,x,t,weight_decay=False):
         layers = list(self.layers.values())
         layers.reverse()
         dout = 1
@@ -55,16 +62,13 @@ class FiveLayorNet:
             dout = layer.backward(dout)
 
         grads = {}
-        grads['w1'] = self.layers['Affine1'].dw
-        grads['b1'] = self.layers['Affine1'].db
-        grads['w2'] = self.layers['Affine2'].dw
-        grads['b2'] = self.layers['Affine2'].db
-        grads['w3'] = self.layers['Affine3'].dw
-        grads['b3'] = self.layers['Affine3'].db
-        grads['w4'] = self.layers['Affine4'].dw
-        grads['b4'] = self.layers['Affine4'].db
-        grads['w5'] = self.layers['Affine5'].dw
-        grads['b5'] = self.layers['Affine5'].db
+        for i in range(1,6):
+            if weight_decay:
+                grads['w'+str(i)] = self.layers['Affine'+str(i)].dw + 0.1*self.params['w'+str(i)]
+            else:
+                grads['w'+str(i)] = self.layers['Affine'+str(i)].dw 
+            
+            grads['b'+str(i)] = self.layers['Affine'+str(i)].db
 
         return grads
 
