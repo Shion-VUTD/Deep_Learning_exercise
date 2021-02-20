@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 import sys,os
 sys.path.append('/Users/yamashitashiori/Desktop/Python3')
-from deep_learning_scratch_for_exercise.dataset import mnist 
+from deep_learning_scratch_for_exercise.dataset_zero import mnist 
 
 #関数の定義
 def softmax(x):
     m = np.max(x,axis = -1,keepdims = True)
-    return np.exp(x-m)/np.sum(np.exp(x-m),axis = 1,keepdims = True)
+    return np.exp(x-m)/np.sum(np.exp(x-m)+1e-7,axis = 1,keepdims = True)
 
 def cross_entropy_error(y,t):
     return -np.sum(t*np.log(y))/t.shape[0]
@@ -121,9 +121,9 @@ class TwoLayorNet:
     def __init__(self,input_size,hidden_size,output_size,weight_init_std = 0.01):
         #パラメータを保持
         self.params = {}
-        self.params['w1'] = np.random.randn(input_size,hidden_size)
+        self.params['w1'] = np.random.randn(input_size,hidden_size)*weight_init_std
         self.params['b1'] = np.zeros(hidden_size)
-        self.params['w2'] = np.random.randn(hidden_size,output_size)
+        self.params['w2'] = np.random.randn(hidden_size,output_size)*weight_init_std
         self.params['b2'] = np.zeros(output_size)
 
         #レイヤを保持
@@ -144,6 +144,13 @@ class TwoLayorNet:
         lost = self.lastLayer.forward(y,t)        
         return lost
 
+    def loss_with_weight_decay(self,x,t):
+        loss = self.loss(x,t)
+        weight = 0
+        for param in self.params.keys():
+            weight += (0.1*np.sum(self.params[param]**2))/2
+        return loss + weight    
+
     def numerical_gradients(self,x,t):
         loss_w = lambda w: self.loss(x,t)
         grads = {}
@@ -152,7 +159,7 @@ class TwoLayorNet:
 
         return grads
 
-    def gradient(self,x,t):
+    def gradient(self,x,t,weight_decay=False):
         layers = list(self.layers.values())
         layers.reverse()
         dout = 1
@@ -161,10 +168,17 @@ class TwoLayorNet:
             dout = layer.backward(dout)
 
         grads = {}
-        grads['w1'] = self.layers['Affine1'].dw
-        grads['b1'] = self.layers['Affine1'].db
-        grads['w2'] = self.layers['Affine2'].dw
-        grads['b2'] = self.layers['Affine2'].db
+        if weight_decay:
+            grads['w1'] = self.layers['Affine1'].dw+self.params['w1']*0.1
+            grads['b1'] = self.layers['Affine1'].db
+            grads['w2'] = self.layers['Affine2'].dw+self.params['w2']*0.1
+            grads['b2'] = self.layers['Affine2'].db
+        else:
+            grads['w1'] = self.layers['Affine1'].dw
+            grads['b1'] = self.layers['Affine1'].db
+            grads['w2'] = self.layers['Affine2'].dw
+            grads['b2'] = self.layers['Affine2'].db
+
 
         return grads
 
@@ -174,6 +188,7 @@ class TwoLayorNet:
         if t.ndim != 1:
             t = np.argmax(t,axis = 1)
         return np.sum(p==t)/t.shape[0]  
+
 
 
 #データセットの準備
