@@ -1,7 +1,7 @@
 #7層のNN生成
 #batch_norm,Dropoutのレイヤ生成はとりあえずデフォルトのを使って後で自力で実装
 import sys,os
-sys.path.append('/Users/yamashitashiori/Desktop/Python3')
+sys.path.append('/Users/myname/Desktop/Python3')
 from deep_learning_scratch_for_exercise.common.layers import Dropout,BatchNormalization,Sigmoid,Relu,Affine,SoftmaxWithLoss
 import numpy as np
 import matplotlib.pyplot as plt
