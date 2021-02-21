@@ -85,12 +85,12 @@ class MultiLayerNet_extend:
             self.params['b'+str(i)] = np.zeros(all_size_list[i])
 
     def predict(self,x,train_flg=False):
-        for key,layer in self.layers,items():
+        for key,layer in self.layers.items():
             if 'Dropout' in key or 'BatchNorm' in key: #DropoutレイヤかBatchNormレイヤのいずれかである時
-                x = value.forward(x,train_flg)
+                x = layer.forward(x,train_flg)
 
             else:
-                x = value.forward(x)
+                x = layer.forward(x)
         return x
 
     def loss(self,x,t,train_flg = False): 
@@ -133,8 +133,8 @@ class MultiLayerNet_extend:
                 grads['beta'+str(i)] = self.layers['BatchNorm'+str(i)].dbeta
 
         return grads
-        
-                            
+
+
 
 
         
